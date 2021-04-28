@@ -475,9 +475,11 @@
 				if (com=="stop")
 					{
 					stopped=true;
-					if(!(AUDIO.paused)) AUDIO.pause();
-					pushCommand("Stopped audio.");
 					arr=[];
+					if (!(AUDIO.paused)) AUDIO.pause();
+					if (!(Number.isNaN(AUDIO.duration))) AUDIO.currentTime=AUDIO.duration;
+					AUDIO.src=null;
+					pushCommand("Stopped audio.");
 					nowPlaying="";
 					navUpdate();
 					return;
