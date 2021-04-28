@@ -164,9 +164,10 @@
 				if (AUDIO.ended)
 					if (arr.length!=0)
 						loadSong();
-					else
+					else{
 						nowPlaying="Queue is empty."
 						updateStatus(false);
+					}
 			}
 			function updateStatus(show_percent){
 				var X=AUDIO.currentTime, Y=AUDIO.duration;
