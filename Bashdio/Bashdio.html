@@ -53,7 +53,7 @@
 			var AUDIO=document.getElementById("player");
 			var R=document.getElementById("rotator");
 			var NAV=document.getElementById("side");
-			var F=false, cut=17, ft=true, DATA=512;
+			var F=false, ft=true, DATA=512;
 			var percentDivide=100, fonWidth=1000;
 			var commands=[], cList=[];
 			var firstPush=true;
@@ -258,7 +258,7 @@
 			}
 			function suckOutName(s){
 				if (typeof s!='string')
-					return s.name.substring(0, s.name.length-cut);
+				s = s.name.substring(0, s.name.length);
 				var x=-1;
 				for (var i=0; i<s.length; i++)
 					{
@@ -267,7 +267,14 @@
 					if (x==-1 && s.charAt(i)=='/')
 						x=0;
 					}
-				return s.substring(x+1, s.length-cut);
+				//first dot from the right has to separate the name from the extension, so the extension is cut from the name
+				var y=0;
+				for(var i=s.length-1; i>=0; i--)
+					{
+					y+=1;
+					if(s.charAt(i)=='.') i=0;
+					}
+				return s.substring(x+1, s.length-y);
 			}
 			function loadSong(){
 				if (arr.length==0)
@@ -288,7 +295,6 @@
 			function doCommand(com){
 				if (com=="help")
 					{
-					pushCommand("cut (number): number of characters cutted from sufix song name.");
 					pushCommand("push (folder name): choose directory, from which clips will be pushed to queue.");
 					pushCommand("ls: view avaliable directory list.");
 					pushCommand("find (song name): find by name and start playing song.");
@@ -329,12 +335,6 @@
 					pushCommand("Queue length: "+arr.length);
 					for (var i=0; i<Math.min(5, arr.length); i++)
 						pushCommand("["+i+"]: "+suckOutName(arr[i]));
-					return;
-					}
-				if (com.substring(0, 3)=="cut")
-					{
-					var cnt=(com.substring(4, com.length)*10)/10;
-					pushCommand("Cut is now set to: "+cnt), cut=cnt;
 					return;
 					}
 				if (com.substring(0, 4)=="push")
