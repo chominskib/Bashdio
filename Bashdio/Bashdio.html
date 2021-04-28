@@ -160,8 +160,8 @@
 					}
 			}
 			function timeUpdater(){
-				if (!(AUDIO.ended)) updateStatus(true);
-				if (AUDIO.ended)
+				if (!(AUDIO.ended) && AUDIO.src!="") updateStatus(true);
+				if (AUDIO.ended || AUDIO.src=="")
 					if (arr.length!=0)
 						loadSong();
 					else{
