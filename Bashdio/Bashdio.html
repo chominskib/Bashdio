@@ -160,25 +160,26 @@
 					}
 			}
 			function timeUpdater(){
-				updateStatus();
+				if (!(AUDIO.ended)) updateStatus(true);
 				if (AUDIO.ended)
 					if (arr.length!=0)
 						loadSong();
 					else
 						nowPlaying="Queue is empty."
+						updateStatus(false);
 			}
-			function updateStatus(){
+			function updateStatus(show_percent){
 				var X=AUDIO.currentTime, Y=AUDIO.duration;
 				if (Number.isNaN(Y))
 					Y=1.0;
 				var S="<", percent=(X/Y)*100;
-				for (var i=1; i<=percentDivide/2; i++)
+				for (var i=1; i<=percentDivide/2-2*show_percent; i++)
 					if (i*(100/percentDivide)<=percent)
 						S+='#';
 					else
 						S+='.';
-				S+="("+Math.floor(percent)+"%)"
-				for (var i=percentDivide/2+1; i<=percentDivide; i++)
+				if(show_percent) S+="("+Math.floor(percent)+"%)";
+				for (var i=percentDivide/2+1+2*show_percent; i<=percentDivide; i++)
 					if (i*(100/percentDivide)<=percent)
 						S+='#';
 					else
@@ -470,8 +471,7 @@
 					}
 				if (com=="stop")
 					{
-					if (!(AUDIO.paused))
-						AUDIO.pause();
+					AUDIO.src="";
 					pushCommand("Stopped audio.");
 					arr=[];
 					nowPlaying="";
