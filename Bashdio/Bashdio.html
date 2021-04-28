@@ -39,6 +39,7 @@
 					- https://github.com/luisbraganca/fake-terminal-website
 					- https://stackoverflow.com/questions/62725857/how-to-get-volume-level-using-javascript
 				TODO:
+					- peaks cheater
 					- none ? :)
 			*/
 			var arr=[], commandInd=0, nowPlaying="-", rotator="-";
@@ -77,6 +78,8 @@
 					for (var i=0; i<bufferLength; i++)
 						{
 						barHeight=dataArray[i];
+						if (barHeight==255)
+							barHeight+=Math.floor(Math.random()*10);
 						var r=barHeight+(25*(i/bufferLength));
 						var g=50;
 						var b=50+200*(i/bufferLength);
