@@ -57,6 +57,7 @@
 			var percentDivide=100, fonWidth=1000;
 			var commands=[], cList=[];
 			var firstPush=true;
+			var stopped=true;
 			pushCommand("Welcome to Bashdio!")
 			INP.addEventListener("keydown", f);
 			setInterval(rotatorUpdate, 1000), rotatorUpdate();
@@ -160,8 +161,8 @@
 					}
 			}
 			function timeUpdater(){
-				if (!(AUDIO.ended) || AUDIO.src!="") updateStatus(true);
-				if (AUDIO.ended && AUDIO.src=="")
+				if (!(AUDIO.ended) && !(stopped)) updateStatus(true);
+				if (AUDIO.ended || stopped)
 					if (arr.length!=0)
 						loadSong();
 					else{
@@ -275,6 +276,7 @@
 					return;
 					}
 				pushCommand("Now playing: "+suckOutName(arr[0])), nowPlaying=suckOutName(arr[0]);
+				stopped=false;
 				if (typeof arr[0]=='string')
 					AUDIO.src=arr[0], AUDIO.play();
 				else
@@ -472,7 +474,8 @@
 					}
 				if (com=="stop")
 					{
-					AUDIO.src="";
+					stopped=true;
+					if(!(AUDIO.paused)) AUDIO.pause();
 					pushCommand("Stopped audio.");
 					arr=[];
 					nowPlaying="";
