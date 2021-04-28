@@ -267,14 +267,20 @@
 					if (x==-1 && s.charAt(i)=='/')
 						x=0;
 					}
-				//first dot from the right has to separate the name from the extension, so the extension is cut from the name
+				//first dot from the right has to separate the name from the extension, so the extension is cut from this dot including
 				var y=0;
 				for(var i=s.length-1; i>=0; i--)
 					{
 					y+=1;
-					if(s.charAt(i)=='.') i=0;
+					if (s.charAt(i)=='.') i=0;
 					}
-				return s.substring(x+1, s.length-y);
+				s = s.substring(x+1, s.length-y);
+				if (s.length > 64)
+				{
+					s=s.substring(0, 64-3);
+					s+="...";
+				}
+				return s;
 			}
 			function loadSong(){
 				if (arr.length==0)
