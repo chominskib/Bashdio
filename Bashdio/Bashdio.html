@@ -293,7 +293,8 @@
 					pushCommand("mute: mute or unmute the audio");
 					pushCommand("f, ff, fff, ffff: move audio forward for: 5s, 15s, 60s, 180s");
 					pushCommand("skip: skip song and start playing next one.");
-					pushCommand("pause, stop: pause current song");
+					pushCommand("pause: pause current song");
+					pushCommand("stop: stop playing songs");
 					pushCommand("play: unpause current song.");
 					pushCommand("start: start playing songs(need to be typed to play audio).");
 					pushCommand("shuffle: creates random queue, by deflaut clips are sorted by name.");
@@ -458,12 +459,22 @@
 					navUpdate();
 					return;
 					}
-				if (com=="pause" || com=="stop")
+				if (com=="pause")
 					{
 					if (AUDIO.paused)
 						pushCommand("Audio is already paused!");
 					else
 						AUDIO.pause(), pushCommand("Paused audio.");
+					navUpdate();
+					return;
+					}
+				if (com=="stop")
+					{
+					if (!(AUDIO.paused))
+						AUDIO.pause();
+					pushCommand("Stopped audio.");
+					arr=[];
+					nowPlaying="";
 					navUpdate();
 					return;
 					}
