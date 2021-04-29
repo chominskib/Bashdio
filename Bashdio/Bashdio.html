@@ -3,12 +3,14 @@
 		<title> Bashdio </title>
 		<link href="resources/main.css" rel="stylesheet" type="text/css" />
 		<link rel="icon" href="resources/icon.png" type="image/x-icon" />
-		<script src="resources/list.js"></script>
 	</head>
 	<body onresize="fixCom()">
 		<input type="file" id="loadReq" multiple hidden onchange=loadFolder()>
 		<div id="sidenav">
 			<button id="sidenavBtn" onclick=fonButton()>֍</button>
+			<div id="folderUpload">
+				<input id="folder" type="file" class="custom-file-input" content='⇓' webkitdirectory mozdirectory onchange="loadMainFolder()">
+			</div>
 			<br>
 			<p id="side"></p>
 			<center>
@@ -41,7 +43,7 @@
 				TODO:
 					- none ? :)
 			*/
-			var arr=[], commandInd=0, nowPlaying="-", rotator="-";
+			var arr=[], mainFolder=[], commandInd=0, nowPlaying="-", rotator="-";
 			var audioContext, analyser, microphone, javascriptNode, can;
 			var visualizerBox=document.getElementById("canvasPlace");
 			var PLAY=document.getElementById("audioPlayerBox");
@@ -55,14 +57,20 @@
 			var NAV=document.getElementById("side");
 			var F=false, ft=true, DATA=512;
 			var percentDivide=100, fonWidth=1000;
+			var firstPush=true, MX=true;
 			var commands=[], cList=[];
-			var firstPush=true;
 			var stopped=true;
+			var prefix="";
 			pushCommand("Welcome to Bashdio!")
 			INP.addEventListener("keydown", f);
 			setInterval(rotatorUpdate, 1000), rotatorUpdate();
 			setInterval(timeUpdater, 1000), timeUpdater();
 			setInterval(navUpdate, 5000), navUpdate();
+			function loadMainFolder(){
+				mainFolder=document.getElementById("folder").files;
+				if (mainFolder.length!=0)
+					document.getElementById("folderUpload").innerHTML="", MX=false, prefix=mainFolder[0].webkitRelativePath.substring(0, 1+mainFolder[0].webkitRelativePath.indexOf('/')), pushCommand("Loaded main folder with "+mainFolder.length+" files.");
+			}
 			function renderFrame(){
 				requestAnimationFrame(renderFrame);
 				if (F)
@@ -78,6 +86,8 @@
 					for (var i=0; i<bufferLength; i++)
 						{
 						barHeight=dataArray[i];
+						if (barHeight==255)
+							barHeight+=Math.floor(Math.random()*10);
 						var r=barHeight+(25*(i/bufferLength));
 						var g=50;
 						var b=50+200*(i/bufferLength);
@@ -132,7 +142,7 @@
 				var files=FILEINP.files;
 				for (var i=0; i<files.length; i++)
 					arr.push(files[i]);
-				pushCommand('Loaded '+files.length+' clips.');
+				pushCommand('Loaded '+files.length+' clips to the queue.');
 			}
 			function fonButton(){
 				if (!F)
@@ -144,7 +154,7 @@
 				if (ft)
 					{
 					ft=false;
-					navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
+					/*navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream){
 						audioContext=new AudioContext();
 						analyser=audioContext.createAnalyser();
 						microphone=audioContext.createMediaStreamSource(stream);
@@ -154,10 +164,16 @@
 						microphone.connect(analyser);
 						analyser.connect(javascriptNode);
 						javascriptNode.connect(audioContext.destination);
-						F=!F;
 						javascriptNode.onaudioprocess=function() {
 						}
-					}).catch(function(err){});
+					}).catch(function(err){});*/
+					context=new AudioContext();
+				    src=context.createMediaElementSource(AUDIO);
+				    analyser=context.createAnalyser();
+				    src.connect(analyser);
+				    analyser.connect(context.destination);
+				    analyser.fftSize=DATA;
+					F=!F;
 					}
 			}
 			function timeUpdater(){
@@ -165,10 +181,11 @@
 				if (AUDIO.ended || stopped)
 					if (arr.length!=0)
 						loadSong();
-					else{
+					else
+            {
 						nowPlaying="Queue is empty."
 						updateStatus(false);
-					}
+					  }
 			}
 			function updateStatus(show_percent){
 				var X=AUDIO.currentTime, Y=AUDIO.duration;
@@ -298,31 +315,74 @@
 				if (arr.length==0)
 					pushCommand('<p style="color:#ff4d4d; display:inline;">Error:</p> Queue is empty!');
 			}
+			function isValid(x){
+				return (x.type.substring(0, 5)=="video");
+			}
 			function doCommand(com){
 				if (com=="help")
 					{
-					pushCommand("push (folder name): choose directory, from which clips will be pushed to queue.");
-					pushCommand("ls: view avaliable directory list.");
-					pushCommand("find (song name): find by name and start playing song.");
-					pushCommand("volume (number): set volume level.");
+					pushCommand("Loading songs:");
+					pushCommand("To load main folder press arrow on navigation bar or drop folder on it.")
+					pushCommand("cd: (folder name): go to specified folder.");
+					pushCommand('push (optional argument "all"): clips from current folder will be pushed to the queue, with all arugment every clip from main folder will be loaded.');
+					pushCommand("ls: view folders inside current folder and amount of clips in it.");
+					pushCommand("showHideUpload: show/hide upload arrow on navigation bar.");
+					pushCommand("load: enables to load any clip directly to queue.");
+					pushCommand("findInQueue (song name): find by name from queue and start playing song.");
+					pushCommand("find (song name): find by name from main folder and start playing song");
+					pushCommand("Controls:");
+					pushCommand("cut (number): number of characters cutted from suffix song name.");
+					pushCommand("volume (number): set volume level (from 0 to 100).");
 					pushCommand("clear: clear previous commands.");
 					pushCommand("mute: mute or unmute the audio");
 					pushCommand("f, ff, fff, ffff: move audio forward for: 5s, 15s, 60s, 180s");
-					pushCommand("skip: skip song and start playing next one.");
-					pushCommand("pause: pause current song");
+					pushCommand("skip: skip current song and start playing next one.");
+          pushCommand("pause: pause current song");
 					pushCommand("stop: stop playing songs");
 					pushCommand("play: unpause current song.");
-					pushCommand("start: start playing songs(need to be typed to play audio).");
-					pushCommand("shuffle: creates random queue, by deflaut clips are sorted by name.");
+					pushCommand("start: start playing songs (needs to be typed to play audio).");
+					pushCommand("shuffle: mix up queue, by default clips are sorted by name.");
 					pushCommand("queue: view 5 next songs in queue.");
 					pushCommand("exit: close Bashdio (may not work).");
-					pushCommand("load: enables to load any clip to queue.");
-					pushCommand("sweep: clears the queue");
+					pushCommand("sweep: clears the queue.");
+					return;
+					}
+				if (com.substring(0, 2)=="cd")
+					{
+					if (mainFolder.length==0)
+						{
+						pushCommand("Main folder was not loaded.");
+						return;
+						}
+					var nam=com.substring(3, com.length);
+					if (nam=='..')
+						{
+						if (prefix.indexOf('/')!=prefix.lastIndexOf('/'))
+							prefix=prefix.substring(0, prefix.indexOf('/')+1);
+						return;
+						}
+					var S=prefix+com.substring(3, com.length)+"/", succes=false;
+					for (var i=0; i<mainFolder.length; i++)
+						if (S==mainFolder[i].webkitRelativePath.substring(0, S.length))
+							succes=true;
+					if (succes)
+						prefix=S;
+					else
+						pushCommand("No such directory.");
 					return;
 					}
 				if (com=="sweep")
 					{
 					arr=[];
+					pushCommand("Queue is empty now.");
+					return;
+					}
+				if (com.toUpperCase()=="showhideupload".toUpperCase())
+					{
+					if (MX)
+						document.getElementById("folderUpload").innerHTML="", MX=false;
+					else
+						document.getElementById("folderUpload").innerHTML='<input id="folder" type="file" class="custom-file-input" content="⇓" webkitdirectory mozdirectory onchange="loadMainFolder()">', MX=true;
 					return;
 					}
 				if (com=="load")
@@ -345,39 +405,84 @@
 					}
 				if (com.substring(0, 4)=="push")
 					{
-					if (firstPush)
+					if (mainFolder.length==0)
 						{
-						firstPush=false;
-						pushCommand('<p style="color:#ff4d4d; display:inline;">Warning:</p> push may not work correctly if script makeList was not run.');
+						pushCommand("Main folder was not loaded.");
+						return;
 						}
-					var Fo=com.substring(5, com.length), W=-1;
-					for (var i=0; i<folders.length; i++)
-						if (folders[i]==Fo)
-							W=i;
-					if (W!=-1)
+					var res=0;
+					if (com.substring(5, com.length)=="all")
 						{
-						for (var i=0; i<clips[W].length; i++)
-							arr.push(clips[W][i]);
-						pushCommand('Pushed '+clips[W].length+' clips to queue from: <p style="color:#3399ff; display:inline;">'+folders[W]+'</p>');
+						for (var i=0; i<mainFolder.length; i++)
+							if (isValid(mainFolder[i]))
+								arr.push(mainFolder[i]), res++;
+						pushCommand('Pushed '+res+' clips to queue from main folder.');
+						return;
 						}
-					else
-						pushCommand('There is no such directory: <p style="color:#ff4d4d; display:inline;">'+Fo+'</p>');
+					for (var i=0; i<mainFolder.length; i++)
+						{
+						if (isValid(mainFolder[i]))
+							{
+							var xx=mainFolder[i].webkitRelativePath;
+							if (prefix==xx.substring(0, prefix.length) && xx.lastIndexOf('/')==prefix.length-1)
+								arr.push(mainFolder[i]), res++;
+							}
+						}
+					pushCommand('Pushed '+res+' clips to queue from: <p style="color:#3399ff; display:inline;">'+prefix+'</p>');
 					return;
 					}
 				if (com=="ls")
 					{
-					var S="Folders: ";
-					for (var i=0; i<folders.length; i++)
-						if (i==folders.length-1)
-							S+=folders[i];
-						else
-							S+=folders[i]+", ";
-					pushCommand(S);
+					if (mainFolder.length==0)
+						{
+						pushCommand("Main folder was not loaded.");
+						return;
+						}
+					var subFolders=[], FIL=0;
+					for (var i=0; i<mainFolder.length; i++)
+						if (mainFolder[i].webkitRelativePath.substring(0, prefix.length)==prefix)
+							{
+							var xx=mainFolder[i].webkitRelativePath, succes=true;
+							xx=xx.substring(prefix.length, xx.length);
+							if (xx.indexOf('/')==-1)
+								{
+								FIL++;
+								continue;
+								}
+							else
+								xx=xx.substring(0, xx.indexOf('/'));
+							xx="["+xx+"]";
+							for (var j=0; j<subFolders.length; j++)
+								if (subFolders[j]==xx)
+									succes=false;
+							if (succes)
+								subFolders.push(xx);
+							}
+					pushCommand("In folder: "+prefix);
+					pushCommand("SubFolders: "+subFolders.toString());
+					pushCommand("Files: "+FIL);
 					return;
 					}
 				if (com.substring(0, 4)=="find")
 					{
 					var name=com.substring(5, com.length), A=0, B=0;
+					for (var i=0; i<mainFolder.length; i++)
+						{
+						var L=match(mainFolder[i].name, name);
+						if (L>A)
+							A=L, B=i;
+						}
+					pushCommand('Best matching with: '+suckOutName(mainFolder[B]));
+					for (var i=0; i<mainFolder.length; i++)
+						if (B!=i && match(mainFolder[i].name, name)>mainFolder[i].name.length)
+							pushCommand('Also good match with: '+suckOutName(mainFolder[i]));
+					arr.unshift(mainFolder[B]);
+					loadSong();
+					return;
+					}
+				if (com.substring(0, 11)=="findInQueue")
+					{
+					var name=com.substring(12, com.length), A=0, B=0;
 					for (var i=0; i<arr.length; i++)
 						{
 						var nam;
